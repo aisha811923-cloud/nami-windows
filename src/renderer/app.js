@@ -6072,11 +6072,11 @@ function aboutPaneHtml() {
     <div class="ab-links">
       <a class="ab-link" href="#" data-url="${esc(notes)}">What's new${version ? ' in ' + esc(version) : ''} <span class="arr">↗</span></a>
       <a class="ab-link" href="#" data-url="${REPO_URL}">Source on GitHub <span class="arr">↗</span></a>
-      <a class="ab-link" href="#" data-url="${REPO_URL}/blob/master/LICENSE">MIT licence <span class="arr">↗</span></a>
+      <a class="ab-link" href="#" data-url="${REPO_URL}/blob/master/LICENSE">Apache License 2.0 <span class="arr">↗</span></a>
     </div>
     <hr class="ab-rule" />
     <div class="ab-made">Made by <a class="ab-link" href="#" data-url="${makerUrl('about')}">Cal</a>, in Nami.</div>
-    <div class="ab-copy">© 2026 Dainami AI · MIT licensed</div>
+    <div class="ab-copy">© 2026 Dainami AI · Apache 2.0 licensed</div>
     <div class="ab-team">
       <button class="btn btn--quiet" data-url="${teamsUrl('about')}">Want Nami for your team? →</button>
     </div>`;
