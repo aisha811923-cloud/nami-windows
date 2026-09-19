@@ -49,8 +49,9 @@ process environments cannot be revoked in place: close and reopen those tiles.
 An agent tile ends when its agent exits. Nami starts the tile's shell with the
 agent command as the shell's script rather than typing the command into an
 interactive prompt, so when the agent finishes or is stopped with Ctrl-C the
-tile closes instead of dropping to a shell prompt that still holds the agent's
-keys. The shell still reads your startup files first. Ordinary terminals and
+session ends instead of dropping to a shell prompt that still holds the agent's
+keys. Its output remains visible in the tile. The shell still reads your startup
+files first. Ordinary terminals and
 older run tiles without launch identity carry no known API keys, so they keep
 their interactive prompt. Installer tiles also keep a prompt afterwards; they
 run without ambient credentials.
@@ -142,5 +143,5 @@ identity remain filtered until reopened through the identified launcher.
 Identified agent sessions run the command as the shell's script and end with
 the agent; a run tile that lost identity is typed into a keyless shell as
 before. Automated coverage includes a real, isolated shell run: the dummy agent
-sees its granted dummy key, and the pty exits with the agent's exit code
+sees its granted dummy key, and the shell exits with the agent's exit code
 without further input.
