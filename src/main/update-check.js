@@ -45,19 +45,30 @@ function isNewer(candidate, current) {
 
 // GitHub's release JSON → { version, url }, or null if it is not something a
 // user should be offered: a draft, a prerelease, or not a release at all.
-function releaseFromApi(doc, arch = process.arch) {
+function releaseFromApi(doc, arch = process.arch, platform = process.platform) {
   if (!doc || typeof doc !== 'object') return null;
   if (doc.draft || doc.prerelease) return null;
   const version = String(doc.tag_name || '').trim().replace(/^v/i, '');
   if (!parseVersion(version)) return null;
 
-  // Hand the user the dmg for the machine they are on. electron-builder names
-  // the arm64 one with the arch in it and leaves x64 bare, so match on that and
-  // fall back to the release page rather than guessing wrong.
   const assets = Array.isArray(doc.assets) ? doc.assets : [];
-  const dmgs = assets.filter((a) => a && typeof a.name === 'string' && a.name.endsWith('.dmg'));
   const wantsArm = String(arch) === 'arm64';
-  const pick = dmgs.find((a) => (/arm64/i.test(a.name)) === wantsArm) || null;
+  let pick = null;
+
+  if (platform === 'win32') {
+    const exes = assets.filter((a) => a && typeof a.name === 'string' && a.name.endsWith('.exe'));
+    if (exes.length) {
+      pick = exes.find((a) => (/arm64/i.test(a.name) === wantsArm) && /setup/i.test(a.name))
+          || exes.find((a) => (/arm64/i.test(a.name) === wantsArm))
+          || null;
+    }
+  }
+
+  if (!pick) {
+    const dmgs = assets.filter((a) => a && typeof a.name === 'string' && a.name.endsWith('.dmg'));
+    pick = dmgs.find((a) => (/arm64/i.test(a.name)) === wantsArm) || null;
+  }
+
   const url = (pick && pick.browser_download_url) || doc.html_url || '';
   if (!url) return null;
   return { version, url };
@@ -86,14 +97,14 @@ async function fetchLatest(url = LATEST) {
 // A reachable GitHub with nothing offerable (the latest is a draft, or a
 // prerelease) is 'current' rather than an error. From where the user stands
 // there is nothing to install, which is what 'current' means.
-async function updateStatus({ currentVersion, arch = process.arch, fetchJson = fetchLatest } = {}) {
+async function updateStatus({ currentVersion, arch = process.arch, platform = process.platform, fetchJson = fetchLatest } = {}) {
   let doc = null;
   try {
     doc = await fetchJson();
   } catch (_) {
     return { state: 'offline' };
   }
-  const rel = releaseFromApi(doc, arch);
+  const rel = releaseFromApi(doc, arch, platform);
   if (!rel || !isNewer(rel.version, currentVersion)) return { state: 'current' };
   return { state: 'update', version: rel.version, url: rel.url };
 }

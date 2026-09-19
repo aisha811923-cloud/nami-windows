@@ -12,8 +12,9 @@ const fsIo = {
 };
 
 function readJson(file, io) {
-  if (!io.exists(file)) return null;
-  try { return JSON.parse(io.read(file)); } catch (_) { return null; }
+  const f = io.exists(file) ? file : (process.platform === 'win32' && io.exists(file.replace(/\\/g, '/')) ? file.replace(/\\/g, '/') : file);
+  if (!io.exists(f)) return null;
+  try { return JSON.parse(io.read(f)); } catch (_) { return null; }
 }
 function writeJson(file, obj, io) { io.write(file, JSON.stringify(obj, null, 2) + '\n'); }
 

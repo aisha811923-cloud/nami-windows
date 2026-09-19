@@ -6,7 +6,7 @@ function checkServer({ command, args = [], env = {}, spawnFn = spawn, timeoutMs 
   return new Promise((resolve) => {
     let child;
     try {
-      child = spawnFn(command, args, { env: { ...process.env, ...env }, stdio: ['pipe', 'pipe', 'pipe'] });
+      child = spawnFn(command, args, { env: { ...process.env, ...env }, stdio: ['pipe', 'pipe', 'pipe'], shell: process.platform === 'win32' });
     } catch (e) {
       resolve({ ok: false, error: 'could not start: ' + e.message });
       return;

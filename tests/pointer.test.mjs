@@ -12,6 +12,14 @@ const {
 } = require('../src/main/pointer.js');
 
 function tmp() { return fs.mkdtempSync(path.join(os.tmpdir(), 'nami-ptr-')); }
+const canSymlink = (() => {
+  try {
+    const d = tmp();
+    fs.symlinkSync('target', path.join(d, 'link'), 'file');
+    fs.rmSync(d, { recursive: true, force: true });
+    return true;
+  } catch (_) { return false; }
+})();
 function skill(slug, description) { return { slug, description }; }
 const TWO = [skill('invoice-check', 'matching an invoice against its PO'), skill('meeting-notes', 'a transcript into decisions and owners')];
 
@@ -213,7 +221,7 @@ test('pointerStatus on a folder with no skills and no files is in sync, not brok
 
 // ---- linkNative -------------------------------------------------------------
 
-test('linkNative gives Claude a relative link into the one real folder', () => {
+test('linkNative gives Claude a relative link into the one real folder', { skip: !canSymlink }, () => {
   const dir = tmp();
   fs.mkdirSync(path.join(dir, 'skills/meeting-notes'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'skills/meeting-notes/SKILL.md'), '---\nname: meeting-notes\n---\nbody\n');
@@ -226,7 +234,7 @@ test('linkNative gives Claude a relative link into the one real folder', () => {
   assert.equal(fs.existsSync(path.join(dir, '.codex/skills')), false, 'only verified paths get one');
 });
 
-test('linkNative is idempotent and drops links whose skill has gone', () => {
+test('linkNative is idempotent and drops links whose skill has gone', { skip: !canSymlink }, () => {
   const dir = tmp();
   fs.mkdirSync(path.join(dir, 'skills/keep'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'skills/keep/SKILL.md'), 'x');

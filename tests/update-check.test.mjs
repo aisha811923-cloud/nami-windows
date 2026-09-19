@@ -70,6 +70,17 @@ test('offers the dmg built for this machine', () => {
   assert.equal(releaseFromApi(release(), 'x64').url, 'https://example.test/x64.dmg');
 });
 
+test('offers the exe built for Windows machines (arm64 and x64)', () => {
+  const winRelease = release({
+    assets: [
+      { name: 'Nami Setup 0.2.0-arm64.exe', browser_download_url: 'https://example.test/win-arm64.exe' },
+      { name: 'Nami Setup 0.2.0-x64.exe', browser_download_url: 'https://example.test/win-x64.exe' },
+    ],
+  });
+  assert.equal(releaseFromApi(winRelease, 'arm64', 'win32').url, 'https://example.test/win-arm64.exe');
+  assert.equal(releaseFromApi(winRelease, 'x64', 'win32').url, 'https://example.test/win-x64.exe');
+});
+
 test('falls back to the release page when no dmg matches', () => {
   const r = releaseFromApi(release({ assets: [] }), 'arm64');
   assert.equal(r.url, 'https://github.com/mrdainami/nami/releases/tag/v0.2.0');

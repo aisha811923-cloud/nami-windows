@@ -65,13 +65,13 @@ function forgetBins() { bins.clear(); }
 // spawn walked a hardcoded list of five paths. The list stays as the floor:
 // it answers before the first scan lands, and on a machine where the shell
 // probe fails entirely.
-function resolveClaudeExecutable({ home = os.homedir(), env = process.env, exists, detected } = {}) {
+function resolveClaudeExecutable({ home = os.homedir(), env = process.env, exists, detected, platform = (home && home.startsWith('/') ? 'darwin' : process.platform) } = {}) {
   const there = exists || ((p) => fs.existsSync(p));
   const scanned = detected === undefined ? knownBin('claude') : detected;
   const candidates = [
     env.CLAUDE_CODE_EXECUTABLE,
     scanned,
-    ...claudeCandidates({ home, env }),
+    ...claudeCandidates({ home, env, platform }),
   ];
   for (const c of candidates) {
     try { if (c && there(c)) return c; } catch (_) {}
@@ -85,12 +85,16 @@ function resolveClaudeExecutable({ home = os.homedir(), env = process.env, exist
 // command-not-found in a tile while the launcher says ready. When the scan
 // already knows where the binary lives, the command is typed by that
 // absolute path instead. Anything the scan doesn't know passes untouched.
-function resolveRunCommand(command) {
+function resolveRunCommand(command, platform = process.platform) {
   const s = String(command || '');
   const m = /^([A-Za-z][\w.-]*)(\s[\s\S]*)?$/.exec(s);
   if (!m) return s;
   const found = knownBin(m[1]);
   if (!found || found === m[1]) return s;
+  if (platform === 'win32' && !found.startsWith('/')) {
+    const head = /\s/.test(found) ? `& "${found}"` : found;
+    return head + (m[2] || '');
+  }
   const head = /[^\w@%+=:,./-]/.test(found) ? `'${found.replace(/'/g, `'\\''`)}'` : found;
   return head + (m[2] || '');
 }

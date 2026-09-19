@@ -6,6 +6,7 @@
 const { spawn } = require('node:child_process');
 const path = require('node:path');
 const fs = require('node:fs');
+const os = require('node:os');
 const { resolveSpawnProgram } = require('./bin-cache');
 const { userPath } = require('./user-path');
 
@@ -20,14 +21,16 @@ function wireAcpLive(ipcMain) {
       if (cmd.includes('claude-agent-acp')) { cmd = 'npx'; cmdArgs = ['-y', '@agentclientprotocol/claude-agent-acp']; }
       else return { ok: false, error: 'not installed: ' + path.basename(cmd) };
     }
-    const runCwd = cwd && fs.existsSync(cwd) ? cwd : process.env.HOME;
+    const runCwd = cwd && fs.existsSync(cwd) ? cwd : os.homedir();
     const envPath = await userPath();
+    const defaultPath = process.platform === 'win32' ? (process.env.PATH || '') : ('/opt/homebrew/bin:/usr/local/bin:' + (process.env.PATH || ''));
     let proc;
     try {
       proc = spawn(cmd, cmdArgs, {
         cwd: runCwd,
-        env: { ...process.env, PATH: envPath || ('/opt/homebrew/bin:/usr/local/bin:' + (process.env.PATH || '')) },
+        env: { ...process.env, PATH: envPath || defaultPath },
         stdio: ['pipe', 'pipe', 'pipe'],
+        shell: process.platform === 'win32',
       });
     } catch (err) {
       return { ok: false, error: String(err && err.message) };

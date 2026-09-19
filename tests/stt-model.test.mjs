@@ -10,13 +10,14 @@ const REPO = 'onnx-community/whisper-tiny.en';
 function memIo() {
   const files = new Set();
   const log = [];
+  const norm = (p) => (typeof p === 'string' ? p.replace(/\\/g, '/') : p);
   return {
     files, log,
-    exists: (p) => files.has(p),
+    exists: (p) => files.has(norm(p)),
     mkdir: () => {},
-    write: (p) => { files.add(p); log.push(['write', p]); },
-    rename: (a, b) => { files.delete(a); files.add(b); log.push(['rename', a, b]); },
-    remove: (p) => { for (const f of [...files]) if (f === p || f.startsWith(p + '/')) files.delete(f); },
+    write: (p) => { files.add(norm(p)); log.push(['write', norm(p)]); },
+    rename: (a, b) => { files.delete(norm(a)); files.add(norm(b)); log.push(['rename', norm(a), norm(b)]); },
+    remove: (p) => { const np = norm(p); for (const f of [...files]) if (f === np || f.startsWith(np + '/')) files.delete(f); },
   };
 }
 function okFetch() {

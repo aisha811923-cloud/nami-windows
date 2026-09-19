@@ -13,14 +13,19 @@
 const path = require('path');
 const fs = require('fs');
 
+function getPath(p) {
+  return typeof p === 'string' && p.startsWith('/') ? path.posix : path;
+}
+
 // A nami-doc URL is  nami-doc://doc/<root>/<rel>  where both parts are
 // percent-encoded absolute-ish path pieces. Host is always "doc"; the first
 // path segment is the encoded root directory, the rest is the resource within
 // it. Keeping the root in the URL means one handler serves every open document
 // without any shared mutable state.
 function buildDocUrl(root, target) {
-  const rel = path.relative(root, target);
-  return 'nami-doc://doc/' + encodeURIComponent(root) + '/' + rel.split(path.sep).map(encodeURIComponent).join('/');
+  const p = getPath(root);
+  const rel = p.relative(root, target);
+  return 'nami-doc://doc/' + encodeURIComponent(root) + '/' + rel.split(p.sep).map(encodeURIComponent).join('/');
 }
 
 // Parse a request URL back to { root, filePath } or null if it is malformed.
@@ -36,7 +41,8 @@ function parseDocUrl(urlString) {
   try { root = decodeURIComponent(parts[0]); } catch (_) { return null; }
   let rel;
   try { rel = parts.slice(1).map(decodeURIComponent).join('/'); } catch (_) { return null; }
-  if (!path.isAbsolute(root)) return null;
+  const p = getPath(root);
+  if (!p.isAbsolute(root)) return null;
   return { root, rel };
 }
 
@@ -46,7 +52,8 @@ function parseDocUrl(urlString) {
 function resolveWithinRoot(root, rel, io = fs) {
   // A rel that is itself absolute (or uses .. to climb) must not win. Joining
   // then re-checking containment catches both.
-  const joined = path.resolve(root, rel);
+  const p = getPath(root);
+  const joined = p.resolve(root, rel);
   const rootReal = safeReal(root, io);
   if (!rootReal) return null;
 
@@ -68,8 +75,9 @@ function safeReal(p, io) {
 // so /foo/bar is inside /foo but /foo-secret is not (a plain startsWith would
 // wrongly accept the second).
 function isInside(root, child) {
-  const rel = path.relative(root, child);
-  return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel));
+  const p = getPath(root);
+  const rel = p.relative(root, child);
+  return rel === '' || (!rel.startsWith('..') && !p.isAbsolute(rel));
 }
 
 // A minimal content type from the extension — enough for a browser to render a

@@ -389,7 +389,7 @@ function createWindow(folder, bounds) {
     // at the foot of paper.css.
     width: 1360, height: 940, minWidth: 560, minHeight: 480,
     ...(bounds && Number.isFinite(bounds.width) ? bounds : {}),
-    ...windowChrome(),
+    ...windowChrome(process.platform, readSettings().theme),
     backgroundColor: settingsStore.themeBackground(readSettings().theme),
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, plugins: true },
   });
@@ -769,7 +769,7 @@ function catalogForRenderer() {
 function claudeExec(argv) {
   return new Promise((resolve) => {
     const bin = knownBin('claude') || 'claude';
-    execFile(bin, argv, { timeout: 20000 }, (err) => {
+    execFile(bin, argv, { timeout: 20000, shell: process.platform === 'win32' }, (err) => {
       resolve(err ? { ok: false, error: err.message.split('\n')[0] } : { ok: true });
     });
   });
@@ -899,7 +899,7 @@ ipcMain.handle('services:disconnect', async (_e, { id, projectPath }) => {
   }
   const viaCli = validServiceId(id) ? await new Promise((resolve) => {
     const bin = knownBin('claude') || 'claude';
-    execFile(bin, ['mcp', 'remove', '--scope', 'user', id], { timeout: 20000 }, (err) => resolve(!err));
+    execFile(bin, ['mcp', 'remove', '--scope', 'user', id], { timeout: 20000, shell: process.platform === 'win32' }, (err) => resolve(!err));
   }) : false;
   if (viaCli) changed.push('claude user settings');
   return { changed };
@@ -913,8 +913,14 @@ ipcMain.handle('url:open', (_e, url) => {
 
 // Theme lives in settings.json so the window background matches on next launch.
 ipcMain.on('theme:applied', (e, theme) => {
-  if (!wins.has(BrowserWindow.fromWebContents(e.sender))) return;
-  windowThemes.set(e.sender.id, settingsStore.normalizeTheme(theme));
+  const w = BrowserWindow.fromWebContents(e.sender);
+  if (!wins.has(w)) return;
+  const normalized = settingsStore.normalizeTheme(theme);
+  windowThemes.set(e.sender.id, normalized);
+  if (process.platform === 'win32' && w && !w.isDestroyed() && typeof w.setTitleBarOverlay === 'function') {
+    const chrome = windowChrome('win32', normalized);
+    if (chrome.titleBarOverlay) w.setTitleBarOverlay(chrome.titleBarOverlay);
+  }
   refreshAppMenu();
 });
 ipcMain.handle('theme:set', (_e, theme) => {
@@ -1353,7 +1359,10 @@ ipcMain.handle('term:create', async (e, { id, cwd, cols, rows, kind, command, pr
   // settled; the await only ever bites on a session created within the first
   // second of launch.
   const envPath = await userPath();
-  const shellPath = process.env.SHELL || (process.platform === 'win32' ? 'powershell.exe' : '/bin/zsh');
+  const isWin = process.platform === 'win32';
+  const shellPath = (isWin && (!process.env.SHELL || process.env.SHELL.startsWith('/')))
+    ? 'powershell.exe'
+    : (process.env.SHELL || (isWin ? 'powershell.exe' : '/bin/zsh'));
   const claudeExe = resolveClaudeExecutable();
 
   let file = shellPath, spawnArgs = [], afterStart = null, claudeWatch = null, echoLine = null, discoverAgent = null, storeWatch = null;
@@ -1383,7 +1392,7 @@ ipcMain.handle('term:create', async (e, { id, cwd, cols, rows, kind, command, pr
     // title watcher followed a transcript nothing ever wrote, and the tile came
     // back empty on the next launch. Quoted because --name carries a sentence,
     // and an unquoted sentence arrives as four arguments.
-    else { file = shellPath; afterStart = ['claude', ...claudeArgs, ...extraArgs].map(shellQuote).join(' '); }
+    else { file = shellPath; afterStart = ['claude', ...claudeArgs, ...extraArgs].map((a) => shellQuote(a, process.platform)).join(' '); }
   } else if (kind === 'harness' && program) {
     file = program; spawnArgs = Array.isArray(args) ? args : [];
   } else if (kind === 'run' && command) {

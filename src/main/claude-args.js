@@ -35,9 +35,13 @@ function projectSlug(cwd) {
 // backtick, no glob, no history bang. The one character single quotes cannot
 // carry is a single quote, which is why it is closed, escaped and reopened.
 // A session named "Cal's export button" is an ordinary thing to have.
-function shellQuote(arg) {
+function shellQuote(arg, platform = 'darwin') {
   const s = String(arg == null ? '' : arg);
   if (s === '') return "''";
+  if (platform === 'win32') {
+    if (/^[A-Za-z0-9_\-./:=@\\]+$/.test(s)) return s;
+    return "'" + s.replace(/'/g, "''") + "'";
+  }
   // plain enough to need nothing — keeps the common command readable in the tile
   if (/^[A-Za-z0-9_\-./:=@]+$/.test(s)) return s;
   return "'" + s.replace(/'/g, `'\\''`) + "'";

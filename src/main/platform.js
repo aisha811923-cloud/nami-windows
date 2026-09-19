@@ -36,7 +36,7 @@ function loginShell(platform = process.platform, env = process.env) {
   if (platform === WIN) {
     // -NoProfile is deliberate and differs from the Unix branch: PowerShell
     // profiles are slow and are not where PATH comes from on Windows.
-    return { file: 'powershell.exe', args: (cmd) => ['-NoProfile', '-Command', cmd] };
+    return { file: 'powershell.exe', args: (cmd) => ['-NoProfile', '-Command', cmd], pathCmd: '$env:PATH' };
   }
   // Ask people in their own shell — a bash user's PATH lives in .bashrc, and
   // zsh would never read it. Anything that is not plainly an absolute path to a
@@ -44,7 +44,7 @@ function loginShell(platform = process.platform, env = process.env) {
   // app and a wrong guess costs every detection.
   const shell = String((env && env.SHELL) || '');
   const file = shell.startsWith('/') && !DEAD_SHELLS.has(shell) ? shell : '/bin/zsh';
-  return { file, args: (cmd) => ['-l', '-i', '-c', cmd] };
+  return { file, args: (cmd) => ['-l', '-i', '-c', cmd], pathCmd: 'printf %s "$PATH"' };
 }
 
 // Where to look when the shell probe comes back empty — a .zshrc that prints a
@@ -113,9 +113,17 @@ function claudeCandidates({ home = '', env = {}, platform = process.platform } =
 // over our own header; Windows has no equivalent, so it gets a hidden frame
 // with an overlay tinted to match the paper header rather than a system bar
 // sitting on top of the design.
-function windowChrome(platform = process.platform) {
+function windowChrome(platform = process.platform, theme = 'glass') {
   if (platform === WIN) {
-    return { titleBarStyle: 'hidden', titleBarOverlay: { color: '#fffdf6', symbolColor: '#2f2b26', height: 38 } };
+    const dark = theme === 'operator' || theme === 'graphite' || theme === 'dusk';
+    return {
+      titleBarStyle: 'hidden',
+      titleBarOverlay: {
+        color: dark ? '#1e1e1e' : '#fffdf6',
+        symbolColor: dark ? '#ffffff' : '#2f2b26',
+        height: 32,
+      },
+    };
   }
   // The sheet is edge-to-edge, so the renderer reserves a 22px lights deck at
   // the top (see .lights-deck in paper.css). y gives the 12px buttons 11px of

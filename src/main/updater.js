@@ -147,9 +147,16 @@ async function downloadUpdate({ isPackaged, emit }) {
 function hasStagedFile(cacheRoot, io = fs) {
   try {
     const dir = path.join(cacheRoot, 'pending');
-    const info = JSON.parse(io.readFileSync(path.join(dir, 'update-info.json'), 'utf8'));
+    const read = (p) => {
+      try { return io.readFileSync(p, 'utf8'); } catch (e) {
+        if (process.platform === 'win32') return io.readFileSync(p.replace(/\\/g, '/'), 'utf8');
+        throw e;
+      }
+    };
+    const exists = (p) => io.existsSync(p) || (process.platform === 'win32' && io.existsSync(p.replace(/\\/g, '/')));
+    const info = JSON.parse(read(path.join(dir, 'update-info.json')));
     const name = info && typeof info.fileName === 'string' ? info.fileName : '';
-    return Boolean(name) && io.existsSync(path.join(dir, name));
+    return Boolean(name) && exists(path.join(dir, name));
   } catch (_) {
     return false;
   }

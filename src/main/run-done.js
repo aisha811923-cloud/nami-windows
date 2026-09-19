@@ -37,14 +37,18 @@
 // the pty, which fires term:exit, which the tile already listens to. Two
 // signals, no hole between them.
 //
-// Pure: main.js owns the pty, this owns the parsing.
+const path = require('path');
 
-const OPEN = ']1337;NamiRunDone=';
-const DONE_RE = /\]1337;NamiRunDone=(-?\d{1,5})(?:|\\)/;
+const OPEN = '\x1b]1337;NamiRunDone=';
+const DONE_RE = /\x1b\]1337;NamiRunDone=(-?\d{1,5})(?:\x07|\x1b\\)/;
 
 // The suffix appended to a run command. Single-quoted so the shell expands
 // nothing in it; "$?" quoted so an empty status cannot swallow the argument.
-function doneSuffix(command) {
+function doneSuffix(command, shell = '') {
+  const isPs = /^(powershell|pwsh)(\.exe)?$/i.test(path.basename(shell || '')) || (shell === 'powershell.exe');
+  if (isPs) {
+    return `${command}; $code = if ($LASTEXITCODE -ne $null) { $LASTEXITCODE } else { [int](-not $?) }; [Console]::Write([char]27 + "]1337;NamiRunDone=" + $code + [char]7)`;
+  }
   return `${command}; printf '\\033]1337;NamiRunDone=%s\\007' "$?"`;
 }
 
@@ -64,7 +68,11 @@ function doneSuffix(command) {
 // left with can run the thing that was installed; the one that ran the install
 // could not.
 function oneShotArgs(shell, command) {
-  return ['-i', '-c', `${doneSuffix(command)}; exec ${shell} -i`];
+  const isPs = /^(powershell|pwsh)(\.exe)?$/i.test(path.basename(shell || '')) || (shell === 'powershell.exe');
+  if (isPs) {
+    return ['-NoExit', '-Command', doneSuffix(command, shell)];
+  }
+  return ['-i', '-c', `${doneSuffix(command, shell)}; exec ${shell} -i`];
 }
 
 // Feed one chunk of pty output. Returns the exit code once, or null.

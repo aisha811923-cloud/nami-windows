@@ -9,7 +9,7 @@ productName: Nami
 # clock. main.js sets the same string on the About panel for dev runs.
 copyright: Copyright © 2026 Dainami AI
 directories:
-  output: release
+  output: dist
   buildResources: build
 
 # Releases go to a DIFFERENT repo from the source, and that is the point.
@@ -37,14 +37,6 @@ files:
   - package.json
   - '!**/*.map'
 
-  # --- weight, in descending order of how much it saves -------------------
-  # 170 MB: the ORT tarball carries every platform. win32 + linux is DirectML and
-  # CUDA that a Mac build can never load.
-  - '!node_modules/onnxruntime-node/bin/napi-v3/win32/**'
-  - '!node_modules/onnxruntime-node/bin/napi-v3/linux/**'
-  # 34 MB: and of the two Mac slices, keep only the one being built.
-  - '!node_modules/onnxruntime-node/bin/napi-v3/darwin/!(${arch})/**'
-
   # 68 MB: transformers declares onnxruntime-web as a hard dependency, but the
   # build we actually load (dist/transformers.node.mjs) imports only node:*,
   # onnxruntime-common, onnxruntime-node and sharp. Nothing reaches for -web.
@@ -65,9 +57,41 @@ extraResources:
 
 # Native binaries cannot be dlopen'd from inside an asar archive.
 asarUnpack:
-  - '**/node_modules/onnxruntime-node/bin/**'
-  - '**/node_modules/@lydell/node-pty/**'
-  - '**/*.node'
+  - "**/*.node"
+  - "node_modules/node-pty/**"
+  - "**/node_modules/@lydell/node-pty/**"
+  - "**/node_modules/@lydell/node-pty-win32-arm64/**"
+  - "**/node_modules/@lydell/node-pty-win32-x64/**"
+  - "**/node_modules/@img/sharp-win32-arm64/**"
+  - "**/node_modules/@img/sharp-win32-x64/**"
+  - "**/node_modules/onnxruntime-node/bin/**"
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+        - arm64
+    - target: portable
+      arch:
+        - x64
+        - arm64
+  icon: build/icon.ico
+  files:
+    - '!node_modules/onnxruntime-node/bin/napi-v3/darwin/**'
+    - '!node_modules/onnxruntime-node/bin/napi-v3/linux/**'
+    - '!node_modules/onnxruntime-node/bin/napi-v3/win32/!(${arch})/**'
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Nami
+  artifactName: ${productName} Setup ${version}-${arch}.${ext}
+
+portable:
+  artifactName: ${productName} ${version}-${arch}.${ext}
 
 # The dmg is what the user downloads, so it is what carries the quarantine flag
 # and what Gatekeeper judges first. electron-builder signs the app and leaves the
@@ -88,6 +112,10 @@ afterAllArtifactBuild: scripts/notarize-dmg.mjs
 artifactName: ${productName}-${arch}.${ext}
 
 mac:
+  files:
+    - '!node_modules/onnxruntime-node/bin/napi-v3/win32/**'
+    - '!node_modules/onnxruntime-node/bin/napi-v3/linux/**'
+    - '!node_modules/onnxruntime-node/bin/napi-v3/darwin/!(${arch})/**'
   category: public.app-category.developer-tools
   target:
     # What a person downloads. Carries the quarantine flag, gets judged by

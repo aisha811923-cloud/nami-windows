@@ -23,20 +23,21 @@ function extOf(p) {
 function handles(filePath) { return OPEN_EXT.includes(extOf(filePath)); }
 
 function dirOf(p) {
-  const s = String(p || '').replace(/\/+$/, '');
-  const i = s.lastIndexOf('/');
-  return i > 0 ? s.slice(0, i) : '/';
+  const s = String(p || '').replace(/[\\/]+$/, '');
+  const i = Math.max(s.lastIndexOf('/'), s.lastIndexOf('\\'));
+  return i > 0 ? s.slice(0, i) : (s.includes('\\') ? s.slice(0, 3) : '/');
 }
 
 // Separator-aware, so "/proj-evil" is not read as living under "/proj". Same
 // boundary test as the renderer's path-guard, for the same reason.
 function contains(folder, filePath) {
   if (!folder) return false;
-  const r = String(folder).replace(/\/+$/, '');
-  return String(filePath).startsWith(r + '/');
+  const r = String(folder).replace(/[\\/]+$/, '');
+  const target = String(filePath || '');
+  return target.startsWith(r + '/') || target.startsWith(r + '\\');
 }
 
-const depth = (folder) => String(folder).split('/').filter(Boolean).length;
+const depth = (folder) => String(folder).split(/[\\/]/).filter(Boolean).length;
 
 // windows: [{ id, folder }] — folder may be null for a window with nothing open.
 // Returns { action, id, folder }:

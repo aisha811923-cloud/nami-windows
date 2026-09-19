@@ -18,27 +18,35 @@ const { loginShell } = require('./platform.js');
 // process has that the shell did not mention. Order matters — the shell's own
 // precedence is the user's intent — and a dev run started from a terminal must
 // not lose entries it was started with.
-function mergePath(loginPath, currentPath) {
-  const parts = String(loginPath || '').split(':').filter(Boolean);
+function mergePath(loginPath, currentPath, platform = process.platform) {
+  const l = String(loginPath || '');
+  const c = String(currentPath || '');
+  const isPosix = l.startsWith('/') || c.startsWith('/');
+  const sep = !isPosix && (platform === 'win32' || l.includes(';') || c.includes(';')) ? ';' : ':';
+  const parts = l.split(sep).filter(Boolean);
   const seen = new Set(parts);
-  for (const p of String(currentPath || '').split(':').filter(Boolean)) {
+  for (const p of c.split(sep).filter(Boolean)) {
     if (!seen.has(p)) { seen.add(p); parts.push(p); }
   }
-  return parts.join(':');
+  return parts.join(sep);
 }
 
 // An interactive shell may greet, warn, or print a version manager banner
 // before it answers. The PATH is the last line that looks like one.
-function pathFromOutput(stdout) {
+function pathFromOutput(stdout, platform = process.platform) {
   const lines = String(stdout || '').split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
-  for (let i = lines.length - 1; i >= 0; i--) if (lines[i].startsWith('/')) return lines[i];
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const line = lines[i];
+    if (/^[a-zA-Z]:[\\/]/.test(line) || line.startsWith('/') || line.includes(';')) return line;
+  }
   return '';
 }
 
 function probe() {
   const sh = loginShell();
+  const cmd = sh.pathCmd || (process.platform === 'win32' ? '$env:PATH' : 'printf %s "$PATH"');
   return new Promise((resolve) => {
-    execFile(sh.file, sh.args('printf %s "$PATH"'), { timeout: 8000 }, (err, stdout) => {
+    execFile(sh.file, sh.args(cmd), { timeout: 8000 }, (err, stdout) => {
       resolve(err ? '' : String(stdout || ''));
     });
   });
@@ -48,11 +56,11 @@ let pending = null;
 // Resolves to the PATH sessions should run with. Never rejects: a shell that
 // fails to answer leaves the app exactly where it was, which is survivable,
 // where a thrown error would take the terminal down with it.
-function userPath({ exec = probe, env = process.env } = {}) {
+function userPath({ exec = probe, env = process.env, platform = process.platform } = {}) {
   if (!pending) {
     pending = Promise.resolve()
       .then(() => exec())
-      .then((out) => mergePath(pathFromOutput(out), env.PATH))
+      .then((out) => mergePath(pathFromOutput(out, platform), env.PATH, platform))
       .catch(() => String(env.PATH || ''));
   }
   return pending;

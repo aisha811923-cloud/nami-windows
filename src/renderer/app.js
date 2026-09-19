@@ -5754,7 +5754,7 @@ function renderSettings() {
           : sec.id === 'look' ? lookPaneHtml()
             : sec.id === 'browser' ? browsers.settingsHtml() : sec.id === 'usage' ? usagePaneHtml() : sec.id === 'about' ? aboutPaneHtml() : sec.id === 'shortcuts' ? shortcutsPaneHtml() : keysPaneHtml()}</div>
     </div></div>
-    <div class="modal-foot">${sec.id === 'voice' ? voiceFootHtml() : sec.id === 'shortcuts' ? '<span class="note">⌘ Command · ⌥ Option · ⇧ Shift</span><button class="shortcuts-link" id="shortcuts-guide">Full guide ↗</button>' : '<span class="note">Saved on this Mac only, nothing syncs.</span>'}
+    <div class="modal-foot">${sec.id === 'voice' ? voiceFootHtml() : sec.id === 'shortcuts' ? '<span class="note">⌘ Command · ⌥ Option · ⇧ Shift</span><button class="shortcuts-link" id="shortcuts-guide">Full guide ↗</button>' : `<span class="note">Saved on this ${window.dainami?.platform === 'win32' ? 'PC' : 'Mac'} only, nothing syncs.</span>`}
       <button class="btn btn--go" id="set-done">Done</button></div>`);
 
   modal.querySelectorAll('.set-nav .rail-tab').forEach((b) => {

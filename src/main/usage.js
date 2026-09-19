@@ -208,6 +208,7 @@ function queryCodex(command, envPath, spawnFn = spawn) {
   });
 }
 function claudeTokenFromKeychain() {
+  if (process.platform !== 'darwin') return null;
   const { execFileSync } = require('node:child_process');
   let user = '';
   try { user = os.userInfo().username; } catch { user = process.env.USER || ''; }

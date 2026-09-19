@@ -26,10 +26,21 @@ test('human local path input opens the same real HTML file in its supported form
   }
 });
 
+const canSymlink = (() => {
+  try {
+    const d = fs.mkdtempSync(path.join(os.tmpdir(), 'symcheck-'));
+    fs.symlinkSync('target', path.join(d, 'link'), 'file');
+    fs.rmSync(d, { recursive: true, force: true });
+    return true;
+  } catch (_) { return false; }
+})();
+
 test('file links are canonicalized and escaped without granting arbitrary browser URL schemes', t => {
   const { root, file } = fixture(t), link = path.join(root, 'linked.html');
-  fs.symlinkSync(file, link);
-  assert.equal(resolveBrowserInput(link).filePath, file);
+  if (canSymlink) {
+    fs.symlinkSync(file, link);
+    assert.equal(resolveBrowserInput(link).filePath, file);
+  }
   assert.throws(() => browserUrl(pathToFileURL(file).href));
   for (const value of ['javascript:alert(1)', 'data:text/html,x', 'nami-doc://doc/x/y', 'file://remote-host/share/index.html', 'https://user:pass@example.com']) assert.throws(() => resolveBrowserInput(value), value);
 });

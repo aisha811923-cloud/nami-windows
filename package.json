@@ -32,6 +32,9 @@
     "fix-update-metadata": "node scripts/fix-update-metadata.mjs",
     "install-local": "node scripts/install-local.mjs",
     "//dist2": "publish never is baked in, not passed: npm appends `-- args` to the end of the whole script string, so with a chained script the flag lands on fix-update-metadata and electron-builder tries to publish anyway. Uploading is a separate step so the update metadata can be corrected first.",
+    "dist:win:x64": "cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win --x64 --publish never",
+    "dist:win:arm64": "cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win --arm64 --publish never",
+    "dist:win:all": "cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win --x64 --arm64 --publish never",
     "check:security": "node scripts/check-security.mjs"
   },
   "dependencies": {
@@ -47,14 +50,22 @@
     "ws": "8.21.3",
     "yauzl": "3.4.0"
   },
+  "optionalDependencies": {
+    "@img/sharp-win32-arm64": "0.35.4",
+    "@img/sharp-win32-x64": "0.35.4",
+    "@lydell/node-pty-win32-arm64": "1.2.0-beta.14",
+    "@lydell/node-pty-win32-x64": "1.2.0-beta.14"
+  },
   "devDependencies": {
     "@milkdown/crepe": "^7.22.1",
     "@xterm/addon-webgl": "^0.19.0",
+    "cross-env": "^10.1.0",
     "electron": "43.7.0",
     "electron-builder": "^26.15.3",
     "esbuild": "^0.28.2",
     "js-yaml": "4.3.2",
-    "marked": "18.0.11"
+    "marked": "18.0.11",
+    "png-to-ico": "^3.0.2"
   },
   "//deps": "transformers and onnxruntime-node are pinned exactly on purpose: a v3→v4 transformers bump swaps the tokenizer and the wasm-vendoring story, and onnxruntime-node's prebuilt-binary layout moves between napi generations. Re-pin deliberately, never by caret drift. Packaging lives in electron-builder.yml.",
   "overrides": {

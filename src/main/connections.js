@@ -47,6 +47,10 @@ function publicMasters(masters) {
   return out;
 }
 
+function getPath(p) {
+  return typeof p === 'string' && p.startsWith('/') ? path.posix : path;
+}
+
 function readJson(file, io) {
   if (!io.exists(file)) return null;
   try { return JSON.parse(io.read(file)); } catch (_) { return null; }
@@ -56,8 +60,9 @@ function writeJson(file, obj, io) { io.write(file, JSON.stringify(obj, null, 2) 
 // ---- masters ----------------------------------------------------------------
 
 function masterPath({ scope, projectPath, homeDir }) {
-  if (scope === 'project') return projectPath ? path.join(projectPath, 'connections.json') : null;
-  return path.join(homeDir, '.nami', 'connections.json');
+  const p = getPath(projectPath || homeDir);
+  if (scope === 'project') return projectPath ? p.join(projectPath, 'connections.json') : null;
+  return p.join(homeDir, '.nami', 'connections.json');
 }
 
 function readMaster({ scope, projectPath, homeDir, io = fsIo }) {
@@ -71,8 +76,9 @@ function readMaster({ scope, projectPath, homeDir, io = fsIo }) {
 // them — so a project master must never reach a remote. Appending to .gitignore
 // is done once, only when a repo is present, and only if the line is absent.
 function guardIgnore({ projectPath, io }) {
-  if (!io.exists(path.join(projectPath, '.git'))) return;
-  const ignoreFile = path.join(projectPath, '.gitignore');
+  const p = getPath(projectPath);
+  if (!io.exists(p.join(projectPath, '.git'))) return;
+  const ignoreFile = p.join(projectPath, '.gitignore');
   const cur = io.exists(ignoreFile) ? io.read(ignoreFile) : '';
   const has = cur.split(/\r?\n/).some((l) => l.trim() === 'connections.json');
   if (has) return;
@@ -186,8 +192,10 @@ function presentInYaml(text, id) {
 // including coverage, where counting it would mean a permanent false "missing".
 
 function notebookTargets({ scope, projectPath, homeDir }) {
-  const p = (rel) => (projectPath ? path.join(projectPath, rel) : null);
-  const h = (rel) => path.join(homeDir, rel);
+  const pp = getPath(projectPath);
+  const ph = getPath(homeDir);
+  const p = (rel) => (projectPath ? pp.join(projectPath, rel) : null);
+  const h = (rel) => (homeDir ? ph.join(homeDir, rel) : null);
   if (scope === 'project') {
     return {
       claude: { kind: 'json', file: p('.mcp.json'), section: 'mcpServers' },
@@ -251,13 +259,15 @@ function deliveryPlan({ masters, scope, agentIds, projectPath, homeDir }) {
 // either, so coverage is the union — same honesty rule as the skills rail.
 
 function readNotebooks({ projectPath, homeDir, agentIds, io = fsIo }) {
+  const pp = getPath(projectPath);
+  const ph = getPath(homeDir);
   const both = [
     notebookTargets({ scope: 'project', projectPath, homeDir }),
     notebookTargets({ scope: 'user', projectPath, homeDir }),
   ];
   // user-scope claude writes via CLI but reads from ~/.claude.json
   const reads = {
-    claude: [projectPath && path.join(projectPath, '.mcp.json'), path.join(homeDir, '.claude.json')],
+    claude: [projectPath && pp.join(projectPath, '.mcp.json'), ph.join(homeDir, '.claude.json')],
   };
   const out = {};
   for (const agent of agentIds) {
@@ -278,7 +288,7 @@ function readNotebooks({ projectPath, homeDir, agentIds, io = fsIo }) {
       }
     }
     if (agent === 'hermes') {
-      const f = path.join(homeDir, '.hermes', 'config.yaml');
+      const f = ph.join(homeDir, '.hermes', 'config.yaml');
       if (io.exists(f)) {
         const text = io.read(f);
         const m = text.match(/^mcp_servers:\s*$([\s\S]*?)(?=^\S|(?![\s\S]))/m);

@@ -12,14 +12,15 @@ const REPO = 'onnx-community/whisper-tiny.en';
 // one event are tested together here, because either half alone looks correct.
 
 function memIo(present = []) {
-  const files = new Set(present);
+  const norm = (p) => (typeof p === 'string' ? p.replace(/\\/g, '/') : p);
+  const files = new Set(present.map(norm));
   return {
     files,
-    exists: (p) => files.has(p),
+    exists: (p) => files.has(norm(p)),
     mkdir: () => {},
-    write: (p) => { files.add(p); },
-    rename: (a, b) => { files.delete(a); files.add(b); },
-    remove: (p) => { for (const f of [...files]) if (f === p || f.startsWith(p + '/')) files.delete(f); },
+    write: (p) => { files.add(norm(p)); },
+    rename: (a, b) => { files.delete(norm(a)); files.add(norm(b)); },
+    remove: (p) => { const np = norm(p); for (const f of [...files]) if (f === np || f.startsWith(np + '/')) files.delete(f); },
   };
 }
 const okFetch = async () => ({ ok: true, arrayBuffer: async () => new ArrayBuffer(8) });

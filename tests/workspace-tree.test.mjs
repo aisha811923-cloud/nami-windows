@@ -26,7 +26,16 @@ function fixture(t) {
   return root;
 }
 
-test('directory listing treats a live link to a directory as a folder', (t) => {
+const canSymlink = (() => {
+  try {
+    const d = fs.mkdtempSync(path.join(os.tmpdir(), 'symcheck-'));
+    fs.symlinkSync('target', path.join(d, 'link'), 'file');
+    fs.rmSync(d, { recursive: true, force: true });
+    return true;
+  } catch (_) { return false; }
+})();
+
+test('directory listing treats a live link to a directory as a folder', { skip: !canSymlink }, (t) => {
   const root = fixture(t);
   const rows = listDirectory(root, true);
 
@@ -41,7 +50,7 @@ test('directory listing treats a live link to a directory as a folder', (t) => {
   assert.equal(rows[2].meta, '7 B');
 });
 
-test('initial shallow tree expands through a linked directory', (t) => {
+test('initial shallow tree expands through a linked directory', { skip: !canSymlink }, (t) => {
   const root = fixture(t);
   const rows = readTree(root, 0, 2);
   const linked = rows.findIndex((row) => row.name === 'linked-skill');

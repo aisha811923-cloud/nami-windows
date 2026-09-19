@@ -7,8 +7,16 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const { upsertMcpJson } = require('../src/main/mcp-config');
 const { upsertMaster } = require('../src/main/connections');
-const { writeSettings } = require('../src/main/settings');
-test('configuration saves keep fake keys owner-only and preserve linked configurations', () => {
+const canSymlink = (() => {
+  try {
+    const d = fs.mkdtempSync(path.join(os.tmpdir(), 'symcheck-'));
+    fs.symlinkSync('target', path.join(d, 'link'), 'file');
+    fs.rmSync(d, { recursive: true, force: true });
+    return true;
+  } catch (_) { return false; }
+})();
+
+test('configuration saves keep fake keys owner-only and preserve linked configurations', { skip: !canSymlink }, () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'nami-private-config-'));
   try {
     const file = path.join(root, 'agent.json'), target = path.join(root, 'linked.json');
