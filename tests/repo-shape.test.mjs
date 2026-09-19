@@ -59,6 +59,19 @@ test('everything a stranger needs is still here', () => {
   assert.deepEqual(missing, [], `No longer published: ${missing.join(', ')}`);
 });
 
+test('source and app distributions carry the same complete Apache license', () => {
+  const license = fs.readFileSync(path.join(ROOT, 'LICENSE'), 'utf8');
+  assert.match(license, /Apache License\s+Version 2\.0, January 2004/);
+  assert.match(license, /END OF TERMS AND CONDITIONS/);
+  assert.match(license, /Copyright 2026 Dainami Pte Ltd/);
+  assert.doesNotMatch(license, /\[yyyy\]|\[name of copyright owner\]|\[Full/);
+  assert.equal(fs.readFileSync(path.join(ROOT, 'src/LICENSE'), 'utf8'), license);
+  const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+  const lock = JSON.parse(fs.readFileSync(path.join(ROOT, 'package-lock.json'), 'utf8'));
+  assert.equal(pkg.license, 'Apache-2.0');
+  assert.equal(lock.packages[''].license, pkg.license);
+});
+
 // Path rules catch a key in a file called secrets.env. They do nothing about a
 // key pasted into a source comment, which is how it usually happens.
 test('no tracked file carries anything shaped like a credential', () => {
