@@ -22,3 +22,21 @@ test('only actual agent launches receive generated messages, never setup or comp
   assert.equal(seedAgentForLaunch({ kind: 'run', command: 'codex', watchDone: true }), null);
   assert.equal(seedAgentForLaunch({ kind: 'shell', command: 'codex' }), null);
 });
+
+test('Hermes can receive one native startup message without changing its selected interface', () => {
+  const env = { HOME: '/home/test', KEEP: 'unchanged' };
+  const result = seedLaunch.initialPromptEnv(env, 'hermes', seed);
+  assert.equal(result.HERMES_TUI_QUERY, seed);
+  assert.equal(result.KEEP, 'unchanged');
+  assert.equal(result.HOME, '/home/test');
+  assert.equal(env.HERMES_TUI_QUERY, undefined);
+});
+test('a startup message cannot be inherited by an unrelated or restored session', () => {
+  const env = { HERMES_TUI_QUERY: 'old message', HOME: '/home/test' };
+  for (const id of ['claude', 'codex', 'opencode', 'kimi', 'grok', 'antigravity', null, 'hermes']) {
+    const result = seedLaunch.initialPromptEnv(env, id, id === 'hermes' ? undefined : seed);
+    assert.equal(result.HERMES_TUI_QUERY, undefined);
+    assert.equal(result.HOME, env.HOME);
+  }
+  assert.equal(env.HERMES_TUI_QUERY, 'old message');
+});

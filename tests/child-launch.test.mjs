@@ -281,3 +281,15 @@ test('the actual shell preserves every prompt character without interpreting it'
   const output = execFileSync('/bin/sh', ['-c', pty.captured.args[2]], { encoding: 'utf8' });
   assert.deepEqual(JSON.parse(output), [longSeed]);
 });
+
+test('Hermes startup messages are scoped to its launch and omitted on normal restore', async () => {
+  for (const seed of [longSeed, undefined]) {
+    const { captured } = await spawnBoundary({ kind: 'run', command: 'hermes', purpose: 'agent', agentId: 'hermes', seed });
+    assert.equal(captured.env.HERMES_TUI_QUERY, seed);
+    assert.equal(captured.env.OPENAI_API_KEY, undefined);
+    assert.equal(captured.env.ANTHROPIC_API_KEY, undefined);
+    assert.equal(captured.args[2], 'hermes');
+  }
+  const { captured } = await spawnBoundary({ kind: 'run', command: 'hermes setup', purpose: 'agent', agentId: 'hermes', seed: longSeed });
+  assert.equal(captured.env.HERMES_TUI_QUERY, undefined);
+});

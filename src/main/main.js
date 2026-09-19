@@ -16,7 +16,7 @@ const { feedOscTitle } = require('./osc-title');
 const { installAppMenu } = require('./app-menu.js');
 const { oneShotArgs, feedRunDone } = require('./run-done');
 const { startSeedGate } = require('./seed-gate');
-const { seedAgentForLaunch, initialPromptArgs } = require('./seed-launch');
+const { seedAgentForLaunch, initialPromptArgs, initialPromptEnv } = require('./seed-launch');
 const { readLiveSession, liveSessionChanged } = require('./session-registry');
 const { buildChildEnv, terminalLaunchPolicy, customAgents, redactChildError } = require('./session-env');
 const { detectAgents, agentStatus, findOnDisk, agentRunCommandAllowed } = require('./agents-detect');
@@ -1466,7 +1466,7 @@ ipcMain.handle('term:create', async (e, { id, cwd, cols, rows, kind, command, pr
     p = pty.spawn(file, spawnArgs, {
       name: 'xterm-256color', cols: cols || 100, rows: rows || 30,
       cwd: (cwd && fs.existsSync(cwd)) ? cwd : os.homedir(),
-      env: sessionEnv(envPath, launch, policy),
+      env: initialPromptEnv(sessionEnv(envPath, launch, policy), seedAgent, seed),
     });
   } catch (err) { sendWc(wc, 'term:data', { id, data: '\r\n[could not start: ' + redactChildError(err, { settings: readSettings() }) + ']\r\n' }); return { ok: false }; }
 

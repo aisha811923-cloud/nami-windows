@@ -28,4 +28,16 @@ function initialPromptArgs(agentId, seed) {
   }
 }
 
-module.exports = { seedAgentForLaunch, initialPromptArgs };
+// Hermes's modern TUI accepts a startup query through this environment key;
+// its classic REPL ignores it and uses the terminal sender. Do not force the
+// user's interface with --tui or turn the conversation into a one-shot query.
+function initialPromptEnv(env, agentId, seed) {
+  const out = { ...env };
+  // A first message belongs to this launch, never to a restored session or a
+  // Nami instance opened from inside another Hermes conversation.
+  delete out.HERMES_TUI_QUERY;
+  if (agentId === 'hermes' && typeof seed === 'string' && seed && !seed.includes('\0')) out.HERMES_TUI_QUERY = seed;
+  return out;
+}
+
+module.exports = { seedAgentForLaunch, initialPromptArgs, initialPromptEnv };

@@ -1,4 +1,4 @@
-// Kimi and Hermes have no interactive initial-prompt argument. Wait for their
+// Kimi and Hermes's classic REPL have no interactive initial-prompt argument. Wait for their
 // empty composer, paste once, then submit only after seeing text or a collapsed
 // paste acknowledgement. Never infer lost input from a missing text echo.
 const ANSI_RE = /\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)|\x1b\[[0-9;?<>= ]*[A-Za-z~]|\x1b./g;
