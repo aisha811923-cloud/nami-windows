@@ -6,8 +6,8 @@ step for the UI — you edit a file and restart.
 ## Run it
 
 ```bash
-git clone https://github.com/mrdainami/nami.git
-cd nami
+git clone https://github.com/aisha811923-cloud/nami-windows.git
+cd nami-windows
 npm install
 npm start
 ```
@@ -100,6 +100,12 @@ sessions. Everything lands in `settings.json` under the app's userData, on that
 Mac only — nothing syncs. API keys typed there beat `OPENAI_API_KEY` /
 `ELEVENLABS_API_KEY` from the shell; a key that came from the environment is
 shown as read-only.
+
+## Child-process credentials
+
+Saved keys are shared only with permitted agents; ordinary terminals and installers
+receive no known ambient API credentials. See [credential permissions](docs/child-process-credentials.md)
+for defaults, settings-file overrides, custom agents, migration, and security limits.
 
 ## Keys
 

@@ -74,7 +74,7 @@ function releaseFromApi(doc, arch = process.arch, platform = process.platform) {
   return { version, url };
 }
 
-const LATEST = 'https://api.github.com/repos/mrdainami/nami/releases/latest';
+const LATEST = 'https://api.github.com/repos/aisha811923-cloud/nami-windows/releases/latest';
 
 async function fetchLatest(url = LATEST) {
   const res = await fetch(url, {

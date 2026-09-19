@@ -12,6 +12,7 @@
 // only kind that reads .zshrc) and costs a second or two, which is fine once
 // and unacceptable per tile.
 const { execFile } = require('node:child_process');
+const { buildChildEnv } = require('./session-env');
 const { loginShell } = require('./platform.js');
 
 // Keep whatever the login shell reports, then append anything the running
@@ -42,11 +43,11 @@ function pathFromOutput(stdout, platform = process.platform) {
   return '';
 }
 
-function probe() {
+function probe({ settings = {}, env = process.env } = {}) {
   const sh = loginShell();
   const cmd = sh.pathCmd || (process.platform === 'win32' ? '$env:PATH' : 'printf %s "$PATH"');
   return new Promise((resolve) => {
-    execFile(sh.file, sh.args(cmd), { timeout: 8000 }, (err, stdout) => {
+    execFile(sh.file, sh.args(cmd), { timeout: 8000, env: buildChildEnv({ parentEnv: env, settings, purpose: 'probe' }) }, (err, stdout) => {
       resolve(err ? '' : String(stdout || ''));
     });
   });
@@ -56,10 +57,10 @@ let pending = null;
 // Resolves to the PATH sessions should run with. Never rejects: a shell that
 // fails to answer leaves the app exactly where it was, which is survivable,
 // where a thrown error would take the terminal down with it.
-function userPath({ exec = probe, env = process.env, platform = process.platform } = {}) {
+function userPath({ exec = probe, env = process.env, settings = {}, platform = process.platform } = {}) {
   if (!pending) {
     pending = Promise.resolve()
-      .then(() => exec())
+      .then(() => exec({ env, settings }))
       .then((out) => mergePath(pathFromOutput(out, platform), env.PATH, platform))
       .catch(() => String(env.PATH || ''));
   }

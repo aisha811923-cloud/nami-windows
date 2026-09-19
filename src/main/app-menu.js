@@ -19,7 +19,7 @@
 // (no electron import, so `node --test` can check it), and one thin function
 // that hands the result to Electron.
 
-const REPO = 'https://github.com/mrdainami/nami';
+const REPO = 'https://github.com/aisha811923-cloud/nami-windows';
 const SITE = 'https://nami.dainami.ai';
 
 // Where the app sends people, and how those visits are told apart later.

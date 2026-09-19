@@ -53,7 +53,7 @@ const release = (over = {}) => ({
   tag_name: 'v0.2.0',
   draft: false,
   prerelease: false,
-  html_url: 'https://github.com/mrdainami/nami/releases/tag/v0.2.0',
+  html_url: 'https://github.com/aisha811923-cloud/nami-windows/releases/tag/v0.2.0',
   assets: [
     { name: 'Nami-0.2.0-arm64.dmg', browser_download_url: 'https://example.test/arm64.dmg' },
     { name: 'Nami-0.2.0.dmg', browser_download_url: 'https://example.test/x64.dmg' },
@@ -83,7 +83,7 @@ test('offers the exe built for Windows machines (arm64 and x64)', () => {
 
 test('falls back to the release page when no dmg matches', () => {
   const r = releaseFromApi(release({ assets: [] }), 'arm64');
-  assert.equal(r.url, 'https://github.com/mrdainami/nami/releases/tag/v0.2.0');
+  assert.equal(r.url, 'https://github.com/aisha811923-cloud/nami-windows/releases/tag/v0.2.0');
 });
 
 test('a draft is not a release', () => {

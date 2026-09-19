@@ -28,7 +28,7 @@ const ALLOWED_TOP = new Set(['src', 'package.json', 'node_modules']);
 const MUST_NOT_SHIP = ['docs', 'tests', 'scripts', '.claude', '.opencode', '.github', 'assets', 'build'];
 // A bundle can be wrong by being empty as easily as by being fat.
 const MUST_SHIP = [
-  'src/main/main.js', 'src/renderer/index.html', 'package.json',
+  'src/main/main.js', 'src/renderer/index.html', 'src/LICENSE', 'package.json',
 ];
 
 function bundles() {
