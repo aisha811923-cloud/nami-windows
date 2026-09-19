@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import path from 'node:path';
 import os from 'node:os';
-import { spawn as spawnChild } from 'node:child_process';
+import { spawn as spawnChild, execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import * as agentLaunch from '../src/renderer/agent-launch.mjs';
 import { shellQuote } from '../src/renderer/file-kinds.mjs';
@@ -21,6 +21,7 @@ async function spawnBoundary(request, config = settings, overrides = {}) {
   let handler, captured;
   const messages = [];
   const context = {
+    ...require('../src/main/seed-launch'), startSeedGate: require('../src/main/seed-gate').startSeedGate,
     ...policy, agentRunCommandAllowed: require('../src/main/agents-detect').agentRunCommandAllowed, process: { env: parentEnv, platform: 'darwin' }, readSettings: () => config,
     storedEnvKeys: () => config.envKeys, settingsStore: require('../src/main/settings'),
     ipcMain: { handle: (_channel, fn) => { handler = fn; } }, browserViews: { registerSession() {} },
@@ -28,7 +29,7 @@ async function spawnBoundary(request, config = settings, overrides = {}) {
     sendWc: (_wc, _channel, message) => messages.push(message), userPath: async () => '/resolved/bin',
     resolveClaudeExecutable: () => '/bin/claude', path, os: { homedir: () => '/home/test' }, fs: { existsSync: () => true },
     claudeSpawnArgs: require('../src/main/claude-args').claudeSpawnArgs, projectSlug: () => 'test',
-    shellQuote: (s) => s, resolveRunCommand: (s) => s, withSpawnFlags: (s) => s,
+    shellQuote, resolveRunCommand: (s) => s, withSpawnFlags: (s) => s,
     agentForCommand: () => null, sessionExists: () => true, resumeCommand: () => null,
     oneShotArgs: () => ['-c', 'dummy-install'],
     // Module state the exit path touches; the throwing pty above never gets there.
@@ -238,4 +239,45 @@ test('an agent tile exits with the agent, and the shell still reads its rc file'
   assert.equal(exit.note, 'exited · 7');
   assert.equal(exit.deliberate, false);
   fs.rmSync(home, { recursive: true, force: true });
+});
+
+const longSeed = "A description with 'quotes', $(echo unsafe), `echo unsafe`\n" + 'Another paragraph.\n'.repeat(400);
+test('generated prompts use native interactive arguments and never terminal retries', async () => {
+  for (const [agentId, command, flag] of [['codex', 'codex', '--'], ['grok', 'grok', '--'], ['opencode', 'opencode', '--prompt='], ['antigravity', 'agy', '--prompt-interactive=']]) {
+    const pty = recordingPty();
+    await spawnBoundary({ kind: 'run', command, agentId, purpose: 'agent', seed: longSeed }, settings, { pty });
+    const tail = flag === '--' ? "'--' " + shellQuote(longSeed) : shellQuote(flag + longSeed);
+    assert.equal(pty.captured.args[2], command + ' ' + tail);
+    assert.deepEqual(pty.writes, []);
+    assert.equal(pty.captured.env.OPENAI_API_KEY, agentId === 'codex' ? 'saved' : undefined);
+  }
+  const pty = recordingPty();
+  await spawnBoundary({ kind: 'claude', seed: longSeed, sid: 'conv-1' }, settings, { pty });
+  assert.deepEqual(pty.captured.args.slice(-2), ['--', longSeed]);
+  assert.deepEqual(pty.writes, []);
+});
+test('Claude shell fallback quotes the initial message without displaying it as a shell command', async () => {
+  const pty = recordingPty();
+  const result = await spawnBoundary({ kind: 'claude', seed: longSeed }, settings, { pty, resolveClaudeExecutable: () => null });
+  assert.ok(pty.captured.args[2].endsWith("'--' " + shellQuote(longSeed)));
+  assert.equal(JSON.stringify(result.messages).includes('Another paragraph'), false);
+  assert.deepEqual(pty.writes, []);
+});
+test('resumed native agents receive a deliberate message once; ordinary restore adds none', async () => {
+  for (const seed of [undefined, longSeed]) {
+    const pty = recordingPty();
+    await spawnBoundary({ kind: 'run', command: 'codex', purpose: 'agent', agentId: 'codex', cont: true, acpSid: 'conv-1', seed }, settings,
+      { pty, agentForCommand: () => 'codex', resumeCommand: () => 'codex resume conv-1' });
+    assert.equal(pty.captured.args[2], 'codex resume conv-1' + (seed ? " '--' " + shellQuote(seed) : ''));
+    assert.deepEqual(pty.writes, []);
+  }
+});
+
+test('the actual shell preserves every prompt character without interpreting it', async () => {
+  const pty = recordingPty();
+  const executable = shellQuote(process.execPath) + ' -e ' + shellQuote('process.stdout.write(JSON.stringify(process.argv.slice(1)))');
+  await spawnBoundary({ kind: 'run', command: 'codex', purpose: 'agent', agentId: 'codex', seed: longSeed }, settings,
+    { pty, resolveRunCommand: () => executable });
+  const output = execFileSync('/bin/sh', ['-c', pty.captured.args[2]], { encoding: 'utf8' });
+  assert.deepEqual(JSON.parse(output), [longSeed]);
 });

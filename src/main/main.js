@@ -16,6 +16,7 @@ const { feedOscTitle } = require('./osc-title');
 const { installAppMenu } = require('./app-menu.js');
 const { oneShotArgs, feedRunDone } = require('./run-done');
 const { startSeedGate } = require('./seed-gate');
+const { seedAgentForLaunch, initialPromptArgs } = require('./seed-launch');
 const { readLiveSession, liveSessionChanged } = require('./session-registry');
 const { buildChildEnv, terminalLaunchPolicy, customAgents, redactChildError } = require('./session-env');
 const { detectAgents, agentStatus, findOnDisk, agentRunCommandAllowed } = require('./agents-detect');
@@ -1374,6 +1375,8 @@ ipcMain.handle('term:create', async (e, { id, cwd, cols, rows, kind, command, pr
   const claudeExe = resolveClaudeExecutable();
   const launch = { kind, purpose, agentId, program, command, args, watchDone, oneShot };
   const policy = sessionPolicy(launch);
+  const seedAgent = seedAgentForLaunch(launch);
+  const promptArgs = initialPromptArgs(seedAgent, seed);
 
   let file = shellPath, spawnArgs = [], afterStart = null, claudeWatch = null, echoLine = null, discoverAgent = null, storeWatch = null;
   if (kind === 'claude') {
@@ -1394,7 +1397,7 @@ ipcMain.handle('term:create', async (e, { id, cwd, cols, rows, kind, command, pr
     // Extra args ride along — the agents picker launches claude as the agent
     // with `--agent <slug>` (probe-backed; see agent-launch.mjs).
     const extraArgs = Array.isArray(args) ? args : [];
-    if (claudeExe) { file = claudeExe; spawnArgs = [...claudeArgs, ...extraArgs]; }
+    if (claudeExe) { file = claudeExe; spawnArgs = [...claudeArgs, ...extraArgs, ...promptArgs]; }
     // No resolvable binary: type the command into a shell instead. It has to be
     // the WHOLE command. A session spawned with a first message used to fall
     // into a marker branch below that typed a bare `claude`, dropping
@@ -1406,8 +1409,9 @@ ipcMain.handle('term:create', async (e, { id, cwd, cols, rows, kind, command, pr
     // this tile carries claude's keys, so it must not outlive claude.
     else {
       file = shellPath;
-      const line = ['claude', ...claudeArgs, ...extraArgs].map(shellQuote).join(' ');
-      if (policy.purpose === 'agent') { spawnArgs = ['-i', '-c', line]; echoLine = line; }
+      const displayLine = ['claude', ...claudeArgs, ...extraArgs].map(shellQuote).join(' ');
+      const line = displayLine + (promptArgs.length ? ' ' + promptArgs.map(shellQuote).join(' ') : '');
+      if (policy.purpose === 'agent' || promptArgs.length) { spawnArgs = ['-i', '-c', line]; echoLine = displayLine; }
       else afterStart = line;
     }
   } else if (kind === 'harness' && program) {
@@ -1444,13 +1448,14 @@ ipcMain.handle('term:create', async (e, { id, cwd, cols, rows, kind, command, pr
       } else if (!acpSid) discoverAgent = agent;
     }
 
+    if (promptArgs.length) typed += ' ' + promptArgs.map(shellQuote).join(' ');
     if (watchDone) { spawnArgs = oneShotArgs(shellPath, typed); echoLine = command; }
     // An agent tile: the shell runs the line as its script and exits with the
     // agent, so the keys in its environment die with it. Still `-i`, so the
     // user's rc file is read and `a && b` registry commands work; no `exec`
     // prefix for the same reason. Unlike a one-shot there is no trailing
     // `exec <shell> -i` — a fresh prompt is exactly the thing to avoid here.
-    else if (policy.purpose === 'agent') { spawnArgs = ['-i', '-c', typed]; echoLine = command; }
+    else if (policy.purpose === 'agent' || promptArgs.length) { spawnArgs = ['-i', '-c', typed]; echoLine = command; }
     else afterStart = typed;
   } else {
     file = shellPath;
@@ -1532,18 +1537,13 @@ ipcMain.handle('term:create', async (e, { id, cwd, cols, rows, kind, command, pr
   // is what dropped claude's args.
   if (afterStart) setTimeout(() => { try { p.write(afterStart + '\r'); } catch (_) {} }, 200);
 
-  // Seed a first message into an interactive session once it's ready
-  // (claude spawns fast; run-kind agent TUIs draw slower, give them longer).
-  // The gate types and then presses Enter only after the app echoes the text
-  // back — a startup dialog (Kimi's trust screen, an update prompt) swallows
-  // typing silently, and the old blind '\r' was answering those dialogs with
-  // whatever they had preselected. See seed-gate.js.
-  if (seed && (kind === 'claude' || kind === 'run')) {
-    const delay = kind === 'claude' ? (claudeExe ? 1600 : 2200) : 2500;
+  // Native initial-message arguments handle most agents, including startup
+  // questions. The remaining interactive CLIs receive one bracketed paste.
+  if (seed && !promptArgs.length && ['kimi', 'hermes'].includes(seedAgent)) {
     seedGate = startSeedGate({
-      write: (s) => { try { p.write(s); } catch (_) {} },
-      seed, firstDelay: delay,
+      write: (s) => { try { p.write(s); } catch (_) {} }, seed, agentId: seedAgent,
     });
+    p.namiSeedGate = seedGate;
   }
   return { ok: true };
 });
@@ -1625,6 +1625,7 @@ ipcMain.handle('session:watch-title', (e, { id, agent, cwd, sid }) => {
 ipcMain.handle('term:write', (_e, { id, data }) => {
   const p = termSessions.get(id);
   if (!p) return { ok: false };
+  if (p.namiSeedGate) p.namiSeedGate.onInput(data);
   try { p.write(data); return { ok: true }; } catch (_) { return { ok: false }; }
 });
 let ptyResizeN = 0;

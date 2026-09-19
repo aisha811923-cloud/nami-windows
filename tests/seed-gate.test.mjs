@@ -26,83 +26,80 @@ function clock() {
   };
 }
 
-const SEED = 'Read .kimi-code/agents/reviewer.md and adopt it as your role.';
-
-function harness(overrides = {}) {
-  const c = clock();
-  const writes = [];
-  const gate = startSeedGate(Object.assign({
-    write: (s) => writes.push(s),
-    seed: SEED,
-    firstDelay: 2500, echoWindow: 900, retryEvery: 1800, maxAttempts: 4,
-    setTimer: c.setTimer, clearTimer: c.clearTimer,
-  }, overrides));
+const SEED = 'Describe this agent.\n' + 'Keep this complete sentence. '.repeat(220);
+const READY = {
+  kimi: '\x1b[2K│ >                     │\r\n╰───────────────────────╯',
+  hermes: '\x1b[?2004h──────────────────────\r\n❯ \r\n──────────────────────',
+};
+function harness(agentId = 'kimi') {
+  const c = clock(), writes = [];
+  const gate = startSeedGate({ agentId, seed: SEED, write: s => writes.push(s), setTimer: c.setTimer, clearTimer: c.clearTimer });
   return { c, writes, gate };
 }
-
-test('sawEcho: an echoed seed is found through ANSI paint and rewrapping', () => {
-  // What codex actually does to a typed line: colour it, break it at its own
-  // width, indent the continuation.
-  const painted = '\x1b[22m Read .kimi-code/agents/reviewer\r\n\x1b[11;1H  .md and adopt';
-  assert.equal(sawEcho(painted, SEED), true);
-});
-
-test('sawEcho: a spinner narrating similar words is not an echo', () => {
-  assert.equal(sawEcho('\x1b[1G\x1b[0K/ Reading configuration files', SEED), false);
-});
-
-test('an input box that echoes gets the seed and one Enter', () => {
+for (const id of ['kimi', 'hermes']) {
+  test(id + ': waits at startup questions, then pastes a long message exactly once', () => {
+    const { c, writes, gate } = harness(id);
+    gate.onData('Trust this folder?\r\n❯ Trust this folder\r\nSet up a provider now? [Y/n]:');
+    c.advance(60000);
+    assert.deepEqual(writes, []);
+    for (const char of READY[id]) gate.onData(char);
+    c.advance(1000);
+    assert.deepEqual(writes, ['\x1b[200~' + SEED + '\x1b[201~']);
+    gate.onData(id === 'kimi' ? '[paste #1 +76 lines]' : '[Pasted text #1: 6 lines]');
+    c.advance(1000);
+    assert.deepEqual(writes, ['\x1b[200~' + SEED + '\x1b[201~', '\r']);
+    gate.onData(READY[id]); c.advance(60000);
+    assert.equal(writes.length, 2);
+  });
+}
+test('a missing or slow echo never causes a duplicate paste', () => {
   const { c, writes, gate } = harness();
-  c.advance(2500);
-  assert.deepEqual(writes, [SEED], 'seed typed at firstDelay');
-  gate.onData('\x1b[38;5;231m' + SEED);          // the app painted the typing back
-  c.advance(200);
-  assert.deepEqual(writes, [SEED, '\r'], 'Enter follows a seen echo');
-  c.advance(60000);
-  assert.deepEqual(writes, [SEED, '\r'], 'and only once');
+  gate.onData(READY.kimi); c.advance(1000); c.advance(10000);
+  assert.equal(writes.length, 1);
+  gate.onData(SEED.slice(0, 40)); c.advance(1000);
+  assert.equal(writes[1], '\r');
 });
-
-test('a silent dialog never gets Enter — the seed is retyped instead', () => {
+test('closing a session cancels a pending paste or Enter', () => {
+  for (const pasted of [false, true]) {
+    const { c, writes, gate } = harness();
+    gate.onData(READY.kimi);
+    if (pasted) { c.advance(1000); gate.onData('[Pasted text #1]'); }
+    gate.stop(); c.advance(60000);
+    assert.equal(writes.length, pasted ? 1 : 0);
+  }
+});
+test('manual input after the paste cancels automatic submission', () => {
   const { c, writes, gate } = harness();
-  c.advance(2500);
-  gate.onData("Trust this folder?\r\n> Don't trust");  // dialog repaints, no echo
-  c.advance(1800);
-  assert.deepEqual(writes, [SEED, SEED], 'no echo: swallowed text is retyped');
-  assert.ok(!writes.includes('\r'), 'and Enter is never sent into the dialog');
+  gate.onData(READY.kimi); c.advance(1000);
+  gate.onData('[Pasted text #1]'); gate.onInput('x'); c.advance(1000);
+  assert.equal(writes.length, 1);
+});
+test('unknown terminal screens never receive speculative typing', () => {
+  const { c, writes, gate } = harness('unknown');
+  gate.onData(READY.kimi + READY.hermes); c.advance(60000);
+  assert.deepEqual(writes, []);
+});
+test('an ANSI-painted, fragmented text echo is still recognised', () => {
+  assert.equal(sawEcho('Describe \x1b[31mthis\r\n agent.', SEED), true);
 });
 
-test('the dialog answered mid-flight, a later attempt lands', () => {
+test('Hermes approval and password prompts cannot be mistaken for its composer', () => {
+  for (const icon of ['⚠', '🔑', '🔐', '?']) {
+    const { c, writes, gate } = harness('hermes');
+    gate.onData('──────────────────────\r\n' + icon + ' ❯ \r\n──────────────────────');
+    c.advance(60000); assert.deepEqual(writes, []);
+  }
+});
+
+test('manual input while the empty composer settles cancels that pending paste', () => {
   const { c, writes, gate } = harness();
-  c.advance(2500 + 1800);                        // attempt 1 swallowed, attempt 2 typed
-  gate.onData(SEED.slice(0, 30));                // now there is an input box echoing
-  gate.onData(SEED.slice(30));
-  c.advance(200);
-  assert.equal(writes.filter((w) => w === '\r').length, 1);
+  gate.onData(READY.kimi); gate.onInput('x'); c.advance(1000);
+  gate.onData(READY.kimi); c.advance(1000);
+  assert.deepEqual(writes, []);
 });
-
-test('a slow echo still gets its Enter, not a duplicate seed', () => {
-  const { c, writes, gate } = harness();
-  c.advance(2500);
-  c.advance(1200);                               // echoWindow passed, retry not yet due
-  gate.onData(SEED);                             // batched repaint arrives late
-  c.advance(200);
-  assert.deepEqual(writes, [SEED, '\r']);
-  c.advance(60000);
-  assert.equal(writes.filter((w) => w === SEED).length, 1, 'no retype after a late echo');
-});
-
-test('bounded: after maxAttempts silent tries it gives up typing', () => {
-  const { c, writes } = harness();
-  c.advance(2500 + 1800 * 10);
-  assert.equal(writes.filter((w) => w === SEED).length, 4, 'maxAttempts seeds, then silence');
-  assert.ok(!writes.includes('\r'));
-});
-
-test('stop() ends everything — a dead session gets no ghost typing', () => {
-  const { c, writes, gate } = harness();
-  c.advance(2500);
-  gate.stop();
-  gate.onData(SEED);
-  c.advance(60000);
-  assert.deepEqual(writes, [SEED], 'nothing after stop, not even the Enter');
+test('terminal control characters cannot break out of the one bracketed paste', () => {
+  const c = clock(), writes = [];
+  const gate = startSeedGate({ agentId: 'kimi', seed: 'Hello\r\nWorld\x1b[201~\x03', write: s => writes.push(s), setTimer: c.setTimer, clearTimer: c.clearTimer });
+  gate.onData(READY.kimi); c.advance(1000);
+  assert.deepEqual(writes, ['\x1b[200~Hello\nWorld[201~\x1b[201~']);
 });
