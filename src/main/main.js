@@ -699,9 +699,10 @@ ipcMain.handle('update:status', async () => {
 // Only https — the url arrives from a network response, and shell.openExternal
 // will happily run other schemes.
 ipcMain.handle('update:open', (_e, url) => {
-  const ok = /^https:\/\//i.test(String(url || ''));
-  if (ok) shell.openExternal(String(url));
-  return { ok };
+  const fallback = 'https://github.com/aisha811923-cloud/nami-windows/releases';
+  const target = (typeof url === 'string' && /^https:\/\//i.test(url) && !url.includes('mrdainami/nami')) ? url : fallback;
+  shell.openExternal(target);
+  return { ok: true };
 });
 
 // Download the update the user just accepted, and tell every window how it is

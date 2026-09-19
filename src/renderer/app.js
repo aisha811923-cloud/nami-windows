@@ -6075,7 +6075,7 @@ function aboutPaneHtml() {
       <a class="ab-link" href="#" data-url="${REPO_URL}/blob/master/LICENSE">Apache License 2.0 <span class="arr">↗</span></a>
     </div>
     <hr class="ab-rule" />
-    <div class="ab-made">Made by <a class="ab-link" href="#" data-url="${makerUrl('about')}">Cal</a>, in Nami.</div>
+    <div class="ab-made">Original by <a class="ab-link" href="#" data-url="${makerUrl('about')}">Cal</a> — Windows port by Aisha.</div>
     <div class="ab-copy">© 2026 Dainami AI · Apache 2.0 licensed</div>
     <div class="ab-team">
       <button class="btn btn--quiet" data-url="${teamsUrl('about')}">Want Nami for your team? →</button>
@@ -6097,6 +6097,11 @@ function wireAboutPane(modal) {
     // one: re-arm the bar with what the pane is showing and let the progress
     // land there, so closing Settings does not lose sight of it.
     if (a && a.state === 'update' && a.url) {
+      if (window.api?.platform === 'win32') {
+        const target = (a.url && !a.url.includes('mrdainami/nami')) ? a.url : 'https://github.com/aisha811923-cloud/nami-windows/releases';
+        await api.openUpdate(target);
+        return;
+      }
       offered = { version: a.latest, url: a.url };
       paintUpdate('downloading', { percent: 0, version: a.latest });
       await api.downloadUpdate();
@@ -6914,7 +6919,14 @@ function paintUpdate(state, ev) {
   </div>`;
 
   q('#uc-get', els.updateRoot).onclick = async () => {
-    if (broke) { await api.openUpdate(offered.url); close(); return; }
+    const targetUrl = (offered && offered.url && !offered.url.includes('mrdainami/nami'))
+      ? offered.url
+      : 'https://github.com/aisha811923-cloud/nami-windows/releases';
+    if (broke || window.api?.platform === 'win32') {
+      await api.openUpdate(targetUrl);
+      close();
+      return;
+    }
     // Everything after this arrives as an event: progress, then ready, or
     // failed — at which point this same bar comes back offering the browser.
     await api.downloadUpdate();

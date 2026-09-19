@@ -6,10 +6,9 @@
 
 One workspace for all of them. Say what you need in plain English and watch it get done.
 
-**[↓ Download for Mac](https://github.com/mrdainami/nami/releases/latest/download/Nami-arm64.dmg)**
+**[↓ Download for Windows (x64 & ARM64)](https://github.com/aisha811923-cloud/nami-windows/releases)**
 
-macOS 13 or later · free and open source
-On an older Intel Mac? [Get the Intel build](https://github.com/mrdainami/nami/releases/latest/download/Nami-x64.dmg).
+Windows 10 / 11 (64-bit) · x64 & ARM64 supported · Free and Open Source
 
 </div>
 
@@ -73,14 +72,14 @@ security warning.
 
 ## Get started
 
-1. **[Download it](https://github.com/mrdainami/nami/releases/latest/download/Nami-arm64.dmg)** and drag Nami into your Applications folder.
+1. **[Download it](https://github.com/aisha811923-cloud/nami-windows/releases)** and run the installer (`.exe`) or standalone portable app.
 2. **Point it at one folder** you work in. It never looks outside it.
 3. **Ask for something.** It finds the agents you already have.
 
-Find your way around with **⌘ Shortcuts** in the app, or read the
+Find your way around with **⌘ / Ctrl Shortcuts** in the app, or read the
 [shortcuts and gestures reference](docs/shortcuts.md).
 
-Windows is coming.
+Windows (x64 & ARM64) is supported natively.
 
 ## Build it yourself
 
@@ -97,13 +96,9 @@ Contributor notes are in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Who makes this
 
-Made by [Cal](https://dainami.ai/links?utm_source=github&utm_medium=readme) —
-and made **in Nami**. Every release on this page was built in the app you are
-looking at.
+Original made by [Cal](https://dainami.ai/links?utm_source=github&utm_medium=readme) — Windows port built by Aisha.
 
-**Want Nami for your team?** Custom builds, Windows, or Nami wired into your
-own stack — [dainami.ai](https://dainami.ai/?utm_source=github&utm_medium=readme&utm_campaign=teams)
-or [cal@dainami.ai](mailto:cal@dainami.ai).
+Windows Port Repository: [github.com/aisha811923-cloud/nami-windows](https://github.com/aisha811923-cloud/nami-windows)
 
 [Apache License 2.0](LICENSE) · [nami.dainami.ai](https://nami.dainami.ai) ·
 [Docs](https://nami.dainami.ai/docs/) ·
