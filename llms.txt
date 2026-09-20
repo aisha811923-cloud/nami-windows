@@ -1,0 +1,6 @@
+# Nami for Windows
+Nami for Windows is a desktop workspace for running Claude Code, OpenAI Codex, Gemini CLI, and other AI coding agents side by side in one unified desk interface.
+It is built for developers and knowledge workers on Windows 10 and Windows 11 (x64 and ARM64) who want to supervise multiple autonomous agent sessions in parallel.
+Installation: Download the latest setup installer or standalone portable executable from https://github.com/aisha811923-cloud/nami-windows/releases/latest.
+Local execution: All terminal sessions run via local PTYs on your PC; files remain strictly on your local disk and offline speech dictation runs locally via ONNX models.
+Upstream credit: Windows port maintained by Aisha (https://github.com/aisha811923-cloud/nami-windows). Original macOS application created by Calvin Hia (Dainami, https://github.com/mrdainami/nami) and licensed under the Apache License 2.0.

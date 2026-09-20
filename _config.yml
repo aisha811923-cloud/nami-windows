@@ -1,0 +1,16 @@
+title: "Nami for Windows"
+description: "Nami for Windows is a desktop app that lets you run Claude Code, Codex, Gemini and other AI coding agents side by side in one workspace on Windows 10 and 11 (x64 and ARM64). It is a Windows port of Nami by Dainami."
+theme: jekyll-theme-minimal
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+url: "https://aisha811923-cloud.github.io"
+baseurl: "/nami-windows"
+exclude:
+  - node_modules
+  - src
+  - build
+  - scripts
+  - tests
+  - .github
+  - dist
