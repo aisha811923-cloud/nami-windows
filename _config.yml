@@ -1,4 +1,5 @@
 title: "Nami for Windows"
+tagline: "Run Claude Code, Codex and Gemini on Windows"
 description: "Nami for Windows is an unofficial Windows port of Nami by Dainami, maintained by Hamza."
 theme: jekyll-theme-minimal
 plugins:
