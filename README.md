@@ -1,4 +1,4 @@
-## Nami for Windows
+## Nami for Windows (unofficial port)
 
 Nami for Windows is an unofficial Windows port of [Nami by Dainami](https://github.com/mrdainami/nami), maintained by Hamza.
 

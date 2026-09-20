@@ -1,4 +1,4 @@
-# Nami for Windows
+# Nami for Windows (unofficial port)
 Nami for Windows is an unofficial Windows port of Nami by Dainami (https://github.com/mrdainami/nami), maintained by Hamza.
 It is a desktop workspace for running Claude Code, OpenAI Codex, Gemini CLI, and other AI coding agents side by side in one unified desk interface on Windows 10 and 11 (x64 and ARM64).
 Installation: Download the latest setup installer or standalone portable executable from https://github.com/aisha811923-cloud/nami-windows/releases/latest.
