@@ -1,6 +1,6 @@
 # Nami for Windows
 
-Nami for Windows is a desktop app that lets you run Claude Code, Codex, Gemini and other AI coding agents side by side in one workspace on Windows 10 and 11 (x64 and ARM64). It is a Windows port of [Nami by Dainami](https://github.com/mrdainami/nami).
+Nami for Windows is a Windows port of [Nami by Dainami](https://github.com/mrdainami/nami), maintained by Hamza.
 
 <div align="center">
 
@@ -121,8 +121,8 @@ Contributor notes are in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Attribution & License
 
-Nami for Windows is licensed under the [Apache License 2.0](LICENSE).
+Original project [Nami by Dainami](https://github.com/mrdainami/nami), licensed under Apache-2.0; Windows port by Hamza.
 
-- **Original Project**: [Nami](https://github.com/mrdainami/nami) by [Calvin Hia](https://dainami.ai/links?utm_source=github&utm_medium=readme) / [Dainami Pte Ltd](https://nami.dainami.ai).
-- **Windows Port**: Maintained by [Aisha](https://github.com/aisha811923-cloud/nami-windows).
+- **Original Project**: [Nami by Dainami](https://github.com/mrdainami/nami) by [Calvin Hia](https://dainami.ai/links?utm_source=github&utm_medium=readme) / [Dainami Pte Ltd](https://nami.dainami.ai).
+- **Windows Port**: Maintained by [Hamza](https://github.com/aisha811923-cloud/nami-windows).
 - Original documentation and resources: [nami.dainami.ai](https://nami.dainami.ai) · [Docs](https://nami.dainami.ai/docs/) · [Terms](https://nami.dainami.ai/terms/).
