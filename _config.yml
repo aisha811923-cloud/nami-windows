@@ -6,6 +6,8 @@ plugins:
   - jekyll-sitemap
 url: "https://aisha811923-cloud.github.io"
 baseurl: "/nami-windows"
+kramdown:
+  parse_block_html: true
 exclude:
   - node_modules
   - src
