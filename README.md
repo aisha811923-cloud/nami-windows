@@ -1,6 +1,6 @@
 # Nami for Windows
 
-Nami for Windows is a Windows port of [Nami by Dainami](https://github.com/mrdainami/nami), maintained by Hamza.
+Nami for Windows is an unofficial Windows port of [Nami by Dainami](https://github.com/mrdainami/nami), maintained by Hamza.
 
 <div align="center">
 
@@ -121,7 +121,7 @@ Contributor notes are in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Attribution & License
 
-Original project [Nami by Dainami](https://github.com/mrdainami/nami), licensed under Apache-2.0; Windows port by Hamza.
+Original project [Nami by Dainami](https://github.com/mrdainami/nami) (Apache-2.0); unofficial Windows port by Hamza.
 
 - **Original Project**: [Nami by Dainami](https://github.com/mrdainami/nami) by [Calvin Hia](https://dainami.ai/links?utm_source=github&utm_medium=readme) / [Dainami Pte Ltd](https://nami.dainami.ai).
 - **Windows Port**: Maintained by [Hamza](https://github.com/aisha811923-cloud/nami-windows).
