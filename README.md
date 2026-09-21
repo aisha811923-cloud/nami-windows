@@ -1,6 +1,6 @@
 ## Nami for Windows (unofficial port)
 
-Nami for Windows is an unofficial Windows port of [Nami by Dainami](https://github.com/mrdainami/nami), maintained by Hamza.
+Nami for Windows is an unofficial Windows port of [Nami by Dainami](https://github.com/mrdainami/nami), maintained by Hamza
 
 <div align="center">
 
@@ -8,7 +8,7 @@ Nami for Windows is an unofficial Windows port of [Nami by Dainami](https://gith
 
 One workspace for all of them. Say what you need in plain English and watch it get done.
 
-**[↓ Download for Windows (x64 & ARM64)](https://github.com/aisha811923-cloud/nami-windows/releases/latest)**
+**[↓ Download for Windows (x64 & ARM64)](*https://github.com/mrdainami/nami/releases)*
 
 Windows 10 / 11 (64-bit) · x64 & ARM64 supported · Free and Open Source
 
@@ -20,7 +20,7 @@ Windows 10 / 11 (64-bit) · x64 & ARM64 supported · Free and Open Source
 
 ## Download
 
-Get the latest installer or portable executable from the **[Releases Page](https://github.com/aisha811923-cloud/nami-windows/releases/latest)**:
+Get the latest installer or portable executable from the **[Releases Page](https://github.com/mrdainami/nami/releases)**:
 
 | Architecture | Package | Description |
 | :--- | :--- | :--- |
