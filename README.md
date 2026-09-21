@@ -8,7 +8,7 @@ Nami for Windows is an unofficial Windows port of [Nami by Dainami](https://gith
 
 One workspace for all of them. Say what you need in plain English and watch it get done.
 
-**[↓ Download for Windows (x64 & ARM64)](*https://github.com/mrdainami/nami/releases)**
+**[↓ Download for Windows (x64 & ARM64)](https://github.com/mrdainami/nami/releases)**
 
 Windows 10 / 11 (64-bit) · x64 & ARM64 supported · Free and Open Source
 
