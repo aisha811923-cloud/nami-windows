@@ -8,7 +8,7 @@ Nami for Windows is an unofficial Windows port of [Nami by Dainami](https://gith
 
 One workspace for all of them. Say what you need in plain English and watch it get done.
 
-**[↓ Download for Windows (x64 & ARM64)](https://github.com/mrdainami/nami/releases)**
+**[↓ Download for Windows (x64 & ARM64)](https://github.com/mrdainami/nami/releases/latest)**
 
 Windows 10 / 11 (64-bit) · x64 & ARM64 supported · Free and Open Source
 
@@ -20,7 +20,7 @@ Windows 10 / 11 (64-bit) · x64 & ARM64 supported · Free and Open Source
 
 ## Download
 
-Get the latest installer or portable executable from the **[Releases Page](https://github.com/mrdainami/nami/releases)**:
+Get the latest installer or portable executable from the **[Releases Page](https://github.com/mrdainami/nami/releases/latest)**:
 
 | Architecture | Package | Description |
 | :--- | :--- | :--- |
@@ -81,7 +81,7 @@ Nami only ever looks inside the one folder you point it at. Dictation runs on yo
 
 ## Get started
 
-1. **[Download it](https://github.com/aisha811923-cloud/nami-windows/releases/latest)** and run the installer (`.exe`) or standalone portable app.
+1. **[Download it](https://github.com/mrdainami/nami/releases/latest)** and run the installer (`.exe`) or standalone portable app.
 2. **Point it at one folder** you work in. It never looks outside it.
 3. **Ask for something.** It finds the agents you already have.
 
